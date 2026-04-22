@@ -66,7 +66,7 @@ export default async function DealDetail({
 
   if (!deal) notFound();
   const d = deal as DashboardRow;
-  const noteRows = (notes ?? []) as NoteRow[];
+  const noteRows = (notes ?? []) as unknown as NoteRow[];
   const interestRows = (interest ?? []) as InterestRow[];
   const attachmentRows = (attachments ?? []) as AttachmentRow[];
 
