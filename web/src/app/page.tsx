@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import { DashboardRow } from "@/lib/types";
-import { money, timeago, statusLabel } from "@/lib/format";
+import { money, timeago } from "@/lib/format";
 import AddInterestModal from "./AddInterestModal";
 import AssignDispoRep from "./deals/[id]/AssignDispoRep";
+import StatusSelect from "./deals/[id]/StatusSelect";
 
 interface ActivitySummary {
   total_deals: number;
@@ -199,7 +200,9 @@ export default async function Home({
                           "—"}
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-xs">{statusLabel(d.status)}</td>
+                    <td className="px-3 py-2.5 text-xs">
+                      <StatusSelect dealId={d.deal_id} current={d.status} />
+                    </td>
                     <td className="px-3 py-2.5 text-xs">
                       <AssignDispoRep
                         dealId={d.deal_id}
