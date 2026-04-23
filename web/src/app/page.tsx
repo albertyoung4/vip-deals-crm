@@ -33,7 +33,12 @@ interface ListingRow {
   county: string | null;
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ rep?: string }>;
+}) {
+  const { rep: selectedRep = "all" } = await searchParams;
   const sb = supabaseAdmin();
 
   const [
@@ -186,25 +191,71 @@ export default async function Home() {
           </div>
         )}
 
-        {rows.length > 0 && (
-          <div className="overflow-hidden rounded-lg border bg-white">
-            <table className="w-full text-sm">
-              <thead className="border-b bg-neutral-100 text-left text-xs uppercase tracking-wide text-neutral-600">
-                <tr>
-                  <th className="px-4 py-2">Address</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Dispo rep</th>
-                  <th className="px-3 py-2 text-right">Ask</th>
-                  <th className="px-3 py-2 text-right">ARV</th>
-                  <th className="px-3 py-2 text-right">Rehab</th>
-                  <th className="px-3 py-2 text-right">PIPP</th>
-                  <th className="px-3 py-2 text-right">Spread</th>
-                  <th className="px-3 py-2 text-right">Bids</th>
-                  <th className="px-3 py-2">Updated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((d) => (
+        {rows.length > 0 && (() => {
+          const byRep = new Map<string, { id: string; name: string; count: number }>();
+          let unassigned = 0;
+          for (const r of rows) {
+            if (!r.dispo_rep_id) {
+              unassigned++;
+              continue;
+            }
+            const prev = byRep.get(r.dispo_rep_id);
+            const name = r.dispo_rep_name || r.dispo_rep_email || "(unnamed)";
+            byRep.set(r.dispo_rep_id, {
+              id: r.dispo_rep_id,
+              name,
+              count: (prev?.count ?? 0) + 1,
+            });
+          }
+          const repTabs = [...byRep.values()].sort((a, b) => a.name.localeCompare(b.name));
+
+          const filtered =
+            selectedRep === "all"
+              ? rows
+              : selectedRep === "unassigned"
+                ? rows.filter((r) => !r.dispo_rep_id)
+                : rows.filter((r) => r.dispo_rep_id === selectedRep);
+
+          return (
+            <>
+              <div className="mb-3 flex flex-wrap gap-1 border-b">
+                <Tab label="All" count={rows.length} value="all" selected={selectedRep} />
+                {unassigned > 0 && (
+                  <Tab
+                    label="Unassigned"
+                    count={unassigned}
+                    value="unassigned"
+                    selected={selectedRep}
+                  />
+                )}
+                {repTabs.map((r) => (
+                  <Tab
+                    key={r.id}
+                    label={r.name}
+                    count={r.count}
+                    value={r.id}
+                    selected={selectedRep}
+                  />
+                ))}
+              </div>
+              <div className="overflow-hidden rounded-lg border bg-white">
+                <table className="w-full text-sm">
+                  <thead className="border-b bg-neutral-100 text-left text-xs uppercase tracking-wide text-neutral-600">
+                    <tr>
+                      <th className="px-4 py-2">Address</th>
+                      <th className="px-3 py-2">Status</th>
+                      <th className="px-3 py-2">Dispo rep</th>
+                      <th className="px-3 py-2 text-right">Ask</th>
+                      <th className="px-3 py-2 text-right">ARV</th>
+                      <th className="px-3 py-2 text-right">Rehab</th>
+                      <th className="px-3 py-2 text-right">PIPP</th>
+                      <th className="px-3 py-2 text-right">Spread</th>
+                      <th className="px-3 py-2 text-right">Bids</th>
+                      <th className="px-3 py-2">Updated</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((d) => (
                   <tr key={d.deal_id} className="border-b last:border-0 hover:bg-neutral-50">
                     <td className="px-4 py-2.5">
                       <Link
@@ -267,12 +318,60 @@ export default async function Home() {
                     </td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    {filtered.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={10}
+                          className="px-4 py-6 text-center text-sm text-neutral-500"
+                        >
+                          No deals for this rep yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          );
+        })()}
       </section>
     </div>
+  );
+}
+
+function Tab({
+  label,
+  count,
+  value,
+  selected,
+}: {
+  label: string;
+  count: number;
+  value: string;
+  selected: string;
+}) {
+  const active = selected === value;
+  const href = value === "all" ? "/" : `/?rep=${encodeURIComponent(value)}`;
+  return (
+    <Link
+      href={href}
+      className={
+        "-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm " +
+        (active
+          ? "border-blue-600 text-blue-700"
+          : "border-transparent text-neutral-600 hover:text-neutral-900")
+      }
+    >
+      <span>{label}</span>
+      <span
+        className={
+          "rounded-full px-1.5 text-xs " +
+          (active ? "bg-blue-100 text-blue-700" : "bg-neutral-100 text-neutral-600")
+        }
+      >
+        {count}
+      </span>
+    </Link>
   );
 }
 
