@@ -91,83 +91,12 @@ export default async function Home({
         <Stat label="Unique bidders (30d)" value={s?.unique_bidders_30d ?? "—"} />
       </section>
 
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Recent bids</h2>
-          <span className="text-xs text-neutral-500">latest {bids.length}</span>
-        </div>
-
-        {bids.length === 0 ? (
-          <div className="rounded border bg-white px-4 py-6 text-sm text-neutral-500">
-            No bids yet.
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-lg border bg-white">
-            <table className="w-full text-sm">
-              <thead className="border-b bg-neutral-100 text-left text-xs uppercase tracking-wide text-neutral-600">
-                <tr>
-                  <th className="px-4 py-2">When</th>
-                  <th className="px-3 py-2">Investor</th>
-                  <th className="px-3 py-2 text-right">Bid</th>
-                  <th className="px-3 py-2">Property</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bids.map((b) => {
-                  const listing = listingById.get(b.listing_id);
-                  const dealId = dealByListing.get(b.listing_id);
-                  const name =
-                    [b.user_first_name, b.user_last_name].filter(Boolean).join(" ") ||
-                    b.user_email ||
-                    "—";
-                  return (
-                    <tr key={b.id} className="border-b last:border-0 hover:bg-neutral-50">
-                      <td className="px-4 py-2 text-xs text-neutral-500">
-                        {timeago(b.created_at)}
-                      </td>
-                      <td className="px-3 py-2">
-                        <div className="font-medium">{name}</div>
-                        <div className="text-xs text-neutral-500">
-                          {[b.user_email, b.user_phone].filter(Boolean).join(" · ") || "—"}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-right font-medium">
-                        {b.price == null ? (
-                          <span className="text-neutral-400">—</span>
-                        ) : (
-                          money(b.price)
-                        )}
-                      </td>
-                      <td className="px-3 py-2">
-                        {dealId ? (
-                          <Link
-                            href={`/deals/${dealId}`}
-                            className="text-blue-700 hover:underline"
-                          >
-                            {listing?.full_address ?? "(view)"}
-                          </Link>
-                        ) : (
-                          <span>{listing?.full_address ?? "—"}</span>
-                        )}
-                        <div className="text-xs text-neutral-500">
-                          {[listing?.us_state, listing?.county].filter(Boolean).join(" · ")}
-                          {!dealId && listing && (
-                            <span className="ml-2 text-neutral-400">· not tracked</span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Deals</h2>
+      <details open className="group">
+        <summary className="mb-3 flex cursor-pointer list-none items-center justify-between">
+          <h2 className="text-lg font-semibold">
+            <span className="mr-1 inline-block transition-transform group-open:rotate-90">▸</span>
+            Deals
+          </h2>
           <div className="flex items-center gap-2">
             <Link
               href="/deals/new"
@@ -177,7 +106,7 @@ export default async function Home({
             </Link>
             <AddInterestModal />
           </div>
-        </div>
+        </summary>
 
         {dealsErr && (
           <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -334,7 +263,84 @@ export default async function Home({
             </>
           );
         })()}
-      </section>
+      </details>
+
+      <details open className="group">
+        <summary className="mb-3 flex cursor-pointer list-none items-center justify-between">
+          <h2 className="text-lg font-semibold">
+            <span className="mr-1 inline-block transition-transform group-open:rotate-90">▸</span>
+            Recent bids
+          </h2>
+          <span className="text-xs text-neutral-500">latest {bids.length}</span>
+        </summary>
+
+        {bids.length === 0 ? (
+          <div className="rounded border bg-white px-4 py-6 text-sm text-neutral-500">
+            No bids yet.
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-lg border bg-white">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-neutral-100 text-left text-xs uppercase tracking-wide text-neutral-600">
+                <tr>
+                  <th className="px-4 py-2">When</th>
+                  <th className="px-3 py-2">Investor</th>
+                  <th className="px-3 py-2 text-right">Bid</th>
+                  <th className="px-3 py-2">Property</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bids.map((b) => {
+                  const listing = listingById.get(b.listing_id);
+                  const dealId = dealByListing.get(b.listing_id);
+                  const name =
+                    [b.user_first_name, b.user_last_name].filter(Boolean).join(" ") ||
+                    b.user_email ||
+                    "—";
+                  return (
+                    <tr key={b.id} className="border-b last:border-0 hover:bg-neutral-50">
+                      <td className="px-4 py-2 text-xs text-neutral-500">
+                        {timeago(b.created_at)}
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="font-medium">{name}</div>
+                        <div className="text-xs text-neutral-500">
+                          {[b.user_email, b.user_phone].filter(Boolean).join(" · ") || "—"}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-right font-medium">
+                        {b.price == null ? (
+                          <span className="text-neutral-400">—</span>
+                        ) : (
+                          money(b.price)
+                        )}
+                      </td>
+                      <td className="px-3 py-2">
+                        {dealId ? (
+                          <Link
+                            href={`/deals/${dealId}`}
+                            className="text-blue-700 hover:underline"
+                          >
+                            {listing?.full_address ?? "(view)"}
+                          </Link>
+                        ) : (
+                          <span>{listing?.full_address ?? "—"}</span>
+                        )}
+                        <div className="text-xs text-neutral-500">
+                          {[listing?.us_state, listing?.county].filter(Boolean).join(" · ")}
+                          {!dealId && listing && (
+                            <span className="ml-2 text-neutral-400">· not tracked</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </details>
     </div>
   );
 }
